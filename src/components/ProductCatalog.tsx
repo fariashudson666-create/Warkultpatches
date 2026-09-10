@@ -14,13 +14,32 @@ import { Product } from '../types';
 
 interface ProductCatalogProps {
   products: Product[];
+  whatsappNumber?: string;
+  whatsappCustomMessage?: string;
 }
 
-export function ProductCatalog({ products }: ProductCatalogProps) {
+export function ProductCatalog({ 
+  products,
+  whatsappNumber = '5511999999999',
+  whatsappCustomMessage = 'Olá! Vi este produto no catálogo do site e gostaria de mais informações:'
+}: ProductCatalogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const formatPrice = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(val);
+  };
+
+  const getWhatsAppUrl = (product: Product) => {
+    const cleanPhone = whatsappNumber.replace(/\D/g, '');
+    const text = `${whatsappCustomMessage}\n\n*${product.name}*\nPreço: ${formatPrice(product.price)}\n${product.description ? `Detalhes: ${product.description.slice(0, 100)}...` : ''}`;
+    return `https://wa.me/${cleanPhone || '5511999999999'}?text=${encodeURIComponent(text)}`;
+  };
 
   // Categories list
   const categories = useMemo(() => {
@@ -46,13 +65,6 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
     return list;
   }, [products, selectedCategory, searchQuery, sortBy]);
-
-  const formatPrice = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(val);
-  };
 
   const getStatusBadge = (status: Product['status']) => {
     switch (status) {
@@ -192,26 +204,40 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
               </div>
 
               {/* Price & Action Footer */}
-              <div className="p-4 pt-2 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  {product.oldPrice && (
-                    <span className="text-[11px] text-slate-400 line-through block">
-                      {formatPrice(product.oldPrice)}
+              <div className="p-4 pt-3 border-t border-slate-100 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    {product.oldPrice && (
+                      <span className="text-[11px] text-slate-400 line-through block">
+                        {formatPrice(product.oldPrice)}
+                      </span>
+                    )}
+                    <span className="text-lg font-black text-slate-900">
+                      {formatPrice(product.price)}
                     </span>
-                  )}
-                  <span className="text-lg font-black text-slate-900">
-                    {formatPrice(product.price)}
-                  </span>
+                  </div>
+
+                  <button
+                    id={`btn-view-product-${product.id}`}
+                    onClick={() => setSelectedProduct(product)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Detalhes</span>
+                  </button>
                 </div>
 
-                <button
-                  id={`btn-view-product-${product.id}`}
-                  onClick={() => setSelectedProduct(product)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                {/* WhatsApp Button on each product */}
+                <a
+                  id={`btn-whatsapp-${product.id}`}
+                  href={getWhatsAppUrl(product)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Ver Detalhes</span>
-                </button>
+                  <MessageCircle className="w-4 h-4 fill-white/20" />
+                  <span>Pedir no WhatsApp</span>
+                </a>
               </div>
             </div>
           ))}
@@ -311,13 +337,13 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                   Fechar
                 </button>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${selectedProduct.name} (${formatPrice(selectedProduct.price)})`)}`}
+                  href={getWhatsAppUrl(selectedProduct)}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  Tenho Interesse / WhatsApp
+                  <MessageCircle className="w-4 h-4 fill-white/20" />
+                  <span>Comprar / Falar no WhatsApp</span>
                 </a>
               </div>
             </div>

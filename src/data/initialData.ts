@@ -1,4 +1,4 @@
-import { Product, EventPost, HeaderBanner, SidebarBanner } from '../types';
+import { Product, EventPost, HeaderBanner, SidebarBanner, SiteSettings } from '../types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -168,3 +168,21 @@ export const INITIAL_SIDEBAR_BANNERS: SidebarBanner[] = [
     active: true
   }
 ];
+
+export const INITIAL_SITE_SETTINGS: SiteSettings = {
+  siteName: 'PortalHub',
+  logoUrl: '',
+  logoMode: 'name-only',
+  logoHeight: 40,
+  whatsappNumber: '5511999999999',
+  whatsappCustomMessage: 'Olá! Tenho interesse no seguinte item do catálogo:',
+  instagramUrl: 'https://instagram.com',
+  backgroundColor: '#f8fafc',
+  backgroundImageUrl: '',
+  backgroundRepeat: 'cover',
+  backgroundOverlayOpacity: 0,
+  headerBgColor: '#ffffff',
+  headerTextColor: 'dark',
+  footerBgColor: '#ffffff',
+  footerTextColor: 'dark'
+};

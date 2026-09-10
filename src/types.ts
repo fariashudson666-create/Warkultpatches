@@ -42,4 +42,24 @@ export interface SidebarBanner {
   active: boolean;
 }
 
+export interface SiteSettings {
+  siteName: string;
+  logoUrl: string;
+  logoMode: 'logo-only' | 'logo-and-name' | 'name-only';
+  logoHeight: number;
+  whatsappNumber: string;
+  whatsappCustomMessage?: string;
+  instagramUrl?: string;
+
+  // Background and Layout Theme Customizations
+  backgroundColor?: string;
+  backgroundImageUrl?: string;
+  backgroundRepeat?: 'cover' | 'repeat' | 'contain' | 'no-repeat';
+  backgroundOverlayOpacity?: number; // 0 to 100
+  headerBgColor?: string;
+  headerTextColor?: 'dark' | 'light';
+  footerBgColor?: string;
+  footerTextColor?: 'dark' | 'light';
+}
+
 export type ActivePage = 'catalogo' | 'eventos' | 'admin';
