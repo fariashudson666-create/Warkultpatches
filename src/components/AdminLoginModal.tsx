@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { Lock, User, KeyRound, Eye, EyeOff, X, AlertCircle, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
-import { verifyCredentials, createSession, isDefaultCredentials, getAdminCredentials } from '../utils/auth';
+import { Lock, User, KeyRound, Eye, EyeOff, X, AlertCircle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { verifyCredentials, createSession } from '../utils/auth';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -52,15 +52,6 @@ export function AdminLoginModal({ isOpen, onClose, onLoginSuccess }: AdminLoginM
     }, 250);
   };
 
-  const handleFillDefaults = () => {
-    const creds = getAdminCredentials();
-    setUsername(creds.username);
-    setPassword(creds.password);
-    setErrorMessage(null);
-  };
-
-  const hasDefault = isDefaultCredentials();
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
@@ -106,28 +97,6 @@ export function AdminLoginModal({ isOpen, onClose, onLoginSuccess }: AdminLoginM
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-800 text-xs">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Quick Helper for Default Credentials - only when factory defaults are unchanged */}
-          {hasDefault && (
-            <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs flex items-center justify-between gap-2">
-              <div className="space-y-0.5">
-                <p className="font-bold flex items-center gap-1.5 text-amber-950">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  Credenciais padrão de acesso:
-                </p>
-                <p className="text-[11px] text-amber-800">
-                  Usuário: <span className="font-mono font-bold">admin</span> | Senha: <span className="font-mono font-bold">admin123</span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleFillDefaults}
-                className="px-2.5 py-1.5 bg-amber-200/80 hover:bg-amber-300 text-amber-950 text-[11px] font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
-              >
-                Preencher
-              </button>
             </div>
           )}
 
