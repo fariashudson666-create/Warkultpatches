@@ -1,0 +1,6 @@
+{
+  "name": "Visualizador de Telas",
+  "description": "Aplicativo para criação e visualização de telas com suporte a links diretos de imagens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
