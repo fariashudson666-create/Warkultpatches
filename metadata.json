@@ -1,6 +1,6 @@
 {
   "name": "Visualizador de Telas",
-  "description": "Aplicativo para criação e visualização de telas com suporte a links diretos de imagens.",
+  "description": "Portal com catálogo de produtos, galeria de fotos de eventos, carrossel de banners no topo, banners dinâmicos na lateral direita e painel admin completo.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
