@@ -60,6 +60,10 @@ export interface SiteSettings {
   headerTextColor?: 'dark' | 'light';
   footerBgColor?: string;
   footerTextColor?: 'dark' | 'light';
+
+  // Browser Tab & Favicon
+  browserTabTitle?: string;
+  faviconUrl?: string;
 }
 
 export type ActivePage = 'catalogo' | 'eventos' | 'admin';

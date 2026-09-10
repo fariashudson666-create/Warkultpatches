@@ -27,7 +27,8 @@ import {
   MessageCircle,
   Instagram,
   Palette,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { 
   Product, 
@@ -121,6 +122,8 @@ export function AdminPanel({
   const [whatsappNumberInput, setWhatsappNumberInput] = useState(siteSettings.whatsappNumber || '5511999999999');
   const [whatsappMessageInput, setWhatsappMessageInput] = useState(siteSettings.whatsappCustomMessage || 'Olá! Tenho interesse no seguinte item do catálogo:');
   const [instagramUrlInput, setInstagramUrlInput] = useState(siteSettings.instagramUrl || 'https://instagram.com');
+  const [browserTabTitleInput, setBrowserTabTitleInput] = useState(siteSettings.browserTabTitle || siteSettings.siteName || 'PortalHub - Catálogo & Eventos');
+  const [faviconUrlInput, setFaviconUrlInput] = useState(siteSettings.faviconUrl || '');
 
   const handleLogoFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,10 +149,12 @@ export function AdminPanel({
       logoHeight: Number(logoHeightInput) || 40,
       whatsappNumber: whatsappNumberInput.trim() || '5511999999999',
       whatsappCustomMessage: whatsappMessageInput.trim(),
-      instagramUrl: instagramUrlInput.trim() || 'https://instagram.com'
+      instagramUrl: instagramUrlInput.trim() || 'https://instagram.com',
+      browserTabTitle: browserTabTitleInput.trim(),
+      faviconUrl: faviconUrlInput.trim()
     };
     onUpdateSiteSettings(updated);
-    showToast('Configurações de Marca, Logo, WhatsApp e Instagram salvas com sucesso!');
+    showToast('Configurações salvas: Logo, Aba do Navegador, WhatsApp e Instagram atualizados!');
   };
 
   // ==========================================
@@ -500,7 +505,7 @@ export function AdminPanel({
           }`}
         >
           <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
-          <span>Minha Logo & WhatsApp</span>
+          <span>Minha Logo, Aba & WhatsApp</span>
           {siteSettings.logoMode === 'logo-only' && (
             <span className="px-1.5 py-0.2 bg-emerald-500 text-white rounded-full text-[10px]">
               Logo Ativa
@@ -1740,10 +1745,83 @@ export function AdminPanel({
               </div>
             </div>
 
+            {/* Section 4: Identidade da Aba do Navegador (Título & Ícone / Favicon) */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+              <div className="border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900">
+                    4. Aba do Navegador (Nome da Guia & Ícone / Favicon)
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Personalize o título que aparece na aba do navegador (Chrome, Safari, celular) e o ícone de atalho (favicon).
+                </p>
+              </div>
+
+              {/* Realistic Browser Tab Mockup */}
+              <div className="bg-slate-100/90 rounded-2xl p-4 border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                  Simulação da Aba no Navegador:
+                </span>
+                <div className="inline-flex items-center gap-2.5 bg-white px-4 py-2 rounded-t-xl border-t-2 border-x border-slate-300 border-t-blue-500 shadow-xs max-w-sm">
+                  {faviconUrlInput ? (
+                    <img
+                      src={faviconUrlInput}
+                      alt="Favicon"
+                      referrerPolicy="no-referrer"
+                      className="w-4 h-4 object-contain rounded-xs shrink-0"
+                    />
+                  ) : (
+                    <span className="text-sm leading-none shrink-0">🛍️</span>
+                  )}
+                  <span className="text-xs font-semibold text-slate-800 truncate">
+                    {browserTabTitleInput || brandNameInput || 'PortalHub'}
+                  </span>
+                  <span className="text-slate-400 text-xs ml-auto font-bold pl-2">✕</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Nome que fica na Aba do Navegador (Título da Guia)*
+                  </label>
+                  <input
+                    id="input-browser-tab-title"
+                    type="text"
+                    required
+                    value={browserTabTitleInput}
+                    onChange={(e) => setBrowserTabTitleInput(e.target.value)}
+                    placeholder="Ex: Hudson Store - Catálogo Oficial 2026"
+                    className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-hidden text-slate-900 font-medium"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Esse texto é exibido no topo da guia do navegador no computador ou nas abas abertas no celular.
+                  </span>
+                </div>
+
+                <div>
+                  <ImageUploadInput
+                    label="Ícone da Aba do Navegador (Favicon)"
+                    value={faviconUrlInput}
+                    onChange={setFaviconUrlInput}
+                    helpText="Envie um arquivo quadrado (.png, .ico, .svg ou .jpg do seu computador) ou cole uma URL."
+                    aspectRatioClass="aspect-square max-w-[120px]"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Dica: Use uma imagem quadrada ou com fundo transparente para melhor nitidez no navegador.
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Save Button */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
               <p className="text-xs text-slate-600">
-                Lembre-se de clicar em salvar para atualizar a logo, WhatsApp e Instagram no site inteiro.
+                Lembre-se de clicar em salvar para aplicar a marca, aba do navegador, WhatsApp e Instagram.
               </p>
               <button
                 id="btn-save-brand-settings"
@@ -1751,7 +1829,7 @@ export function AdminPanel({
                 className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Salvar Minha Logo, WhatsApp & Instagram</span>
+                <span>Salvar Minha Marca, Aba & Contatos</span>
               </button>
             </div>
           </form>

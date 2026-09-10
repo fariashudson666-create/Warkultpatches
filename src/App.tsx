@@ -120,6 +120,23 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activePage]);
 
+  // Update document title and browser tab favicon dynamically
+  useEffect(() => {
+    const pageTitle = siteSettings.browserTabTitle?.trim() || siteSettings.siteName || 'PortalHub';
+    document.title = pageTitle;
+
+    const faviconUrl = siteSettings.faviconUrl?.trim();
+    if (faviconUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = faviconUrl;
+    }
+  }, [siteSettings.browserTabTitle, siteSettings.siteName, siteSettings.faviconUrl]);
+
   // Check active sidebar banners count
   const activeSidebarBanners = sidebarBanners.filter(b => b.active);
 

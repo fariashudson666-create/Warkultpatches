@@ -184,5 +184,7 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   headerBgColor: '#ffffff',
   headerTextColor: 'dark',
   footerBgColor: '#ffffff',
-  footerTextColor: 'dark'
+  footerTextColor: 'dark',
+  browserTabTitle: 'PortalHub - Catálogo & Eventos',
+  faviconUrl: ''
 };
