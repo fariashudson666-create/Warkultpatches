@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-11T03:05:30.634Z",
+  "updatedAt": "2026-09-11T03:05:54.533Z",
   "version": 1,
   "siteSettings": {
     "siteName": "PortalHub",
@@ -17,7 +17,7 @@
     "headerTextColor": "dark",
     "footerBgColor": "#ffffff",
     "footerTextColor": "dark",
-    "browserTabTitle": "PortalHub - Catálogo & Eventos",
+    "browserTabTitle": "WarKult",
     "faviconUrl": ""
   },
   "products": [
