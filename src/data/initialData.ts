@@ -2,7 +2,7 @@ import { Product, EventPost, HeaderBanner, SidebarBanner, SiteSettings } from '.
 
 /**
  * Arquivo gerado automaticamente pelo Painel Administrativo.
- * Última sincronização: 2026-09-11T03:07:42.105Z
+ * Última sincronização: 2026-09-11T03:08:05.183Z
  */
 
 export const INITIAL_PRODUCTS: Product[] = [
@@ -130,9 +130,9 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   "logoUrl": "",
   "logoMode": "name-only",
   "logoHeight": 40,
-  "whatsappNumber": "5511999999999",
+  "whatsappNumber": "5547989149144",
   "whatsappCustomMessage": "Olá! Tenho interesse no seguinte item do catálogo:",
-  "instagramUrl": "https://instagram.com",
+  "instagramUrl": "https://instagram.com/warkultpatches",
   "backgroundColor": "#f8fafc",
   "backgroundImageUrl": "",
   "backgroundRepeat": "cover",
