@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-25T12:00:00.000Z",
+  "updatedAt": "2026-09-11T03:05:30.634Z",
   "version": 1,
   "siteSettings": {
     "siteName": "PortalHub",
@@ -25,47 +25,58 @@
       "id": "prod-1",
       "name": "Smartwatch Pro Series 9",
       "category": "Eletrônicos",
-      "price": 389.90,
-      "oldPrice": 499.00,
+      "price": 389.9,
+      "oldPrice": 499,
       "description": "Tela AMOLED de alta definição, monitoramento cardíaco contínuo, GPS integrado e resistência à água 5ATM.",
       "imageUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
       "status": "promotion",
-      "tags": ["Mais Vendido", "Promoção"],
+      "tags": [
+        "Mais Vendido",
+        "Promoção"
+      ],
       "featured": true
     },
     {
       "id": "prod-2",
       "name": "Fone Bluetooth ANC Studio",
       "category": "Áudio",
-      "price": 249.90,
-      "oldPrice": 320.00,
+      "price": 249.9,
+      "oldPrice": 320,
       "description": "Cancelamento de ruído ativo de 35dB, bateria de 40 horas e almofadas ultra-confortáveis em couro sintético.",
       "imageUrl": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
       "status": "featured",
-      "tags": ["Destaque", "Áudio Hi-Fi"],
+      "tags": [
+        "Destaque",
+        "Áudio Hi-Fi"
+      ],
       "featured": true
     },
     {
       "id": "prod-3",
       "name": "Mochila Executiva Impermeável",
       "category": "Acessórios",
-      "price": 189.90,
+      "price": 189.9,
       "description": "Compartimento acolchoado para notebook até 16'', tecido Oxford anti-riscos e porta USB externa.",
       "imageUrl": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
       "status": "new",
-      "tags": ["Lançamento"],
+      "tags": [
+        "Lançamento"
+      ],
       "featured": false
     },
     {
       "id": "prod-4",
       "name": "Teclado Mecânico Wireless RGB",
       "category": "Informática",
-      "price": 319.00,
-      "oldPrice": 380.00,
+      "price": 319,
+      "oldPrice": 380,
       "description": "Switches hot-swappable, conectividade tri-mode (Bluetooth, 2.4Ghz e cabo) e bateria de 3000mAh.",
       "imageUrl": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
       "status": "available",
-      "tags": ["Gamer", "Produtividade"],
+      "tags": [
+        "Gamer",
+        "Produtividade"
+      ],
       "featured": true
     }
   ],
