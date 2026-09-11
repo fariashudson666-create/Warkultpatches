@@ -2,7 +2,7 @@ import { Product, EventPost, HeaderBanner, SidebarBanner, SiteSettings } from '.
 
 /**
  * Arquivo gerado automaticamente pelo Painel Administrativo.
- * Última sincronização: 2026-09-11T03:05:54.533Z
+ * Última sincronização: 2026-09-11T03:05:58.828Z
  */
 
 export const INITIAL_PRODUCTS: Product[] = [
