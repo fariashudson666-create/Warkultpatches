@@ -2,7 +2,7 @@ import { Product, EventPost, HeaderBanner, SidebarBanner, SiteSettings } from '.
 
 /**
  * Arquivo gerado automaticamente pelo Painel Administrativo.
- * Última sincronização: 2026-09-11T03:05:30.634Z
+ * Última sincronização: 2026-09-11T03:05:54.533Z
  */
 
 export const INITIAL_PRODUCTS: Product[] = [
@@ -141,6 +141,6 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   "headerTextColor": "dark",
   "footerBgColor": "#ffffff",
   "footerTextColor": "dark",
-  "browserTabTitle": "PortalHub - Catálogo & Eventos",
+  "browserTabTitle": "WarKult",
   "faviconUrl": ""
 };
