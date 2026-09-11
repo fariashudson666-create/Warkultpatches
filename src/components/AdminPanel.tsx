@@ -28,7 +28,8 @@ import {
   Instagram,
   Palette,
   Loader2,
-  Globe
+  Globe,
+  GitBranch
 } from 'lucide-react';
 import { 
   Product, 
@@ -45,9 +46,10 @@ import {
 } from '../utils/auth';
 import { ImageUploadInput } from './ImageUploadInput';
 import { ThemeSettingsTab } from './ThemeSettingsTab';
+import { GitHubSyncTab } from './GitHubSyncTab';
 import { readFileAsOptimizedDataUrl } from '../utils/fileUpload';
 
-export type AdminTab = 'header-banners' | 'sidebar-banners' | 'products' | 'events' | 'brand' | 'theme' | 'security';
+export type AdminTab = 'header-banners' | 'sidebar-banners' | 'products' | 'events' | 'brand' | 'theme' | 'github' | 'security';
 
 interface AdminPanelProps {
   products: Product[];
@@ -527,6 +529,22 @@ export function AdminPanel({
           {(siteSettings.headerBgColor !== '#ffffff' || siteSettings.footerBgColor !== '#ffffff' || siteSettings.backgroundImageUrl) && (
             <span className="w-2 h-2 rounded-full bg-purple-500" title="Cores personalizadas ativas" />
           )}
+        </button>
+
+        <button
+          id="tab-admin-github"
+          onClick={() => setActiveTab('github')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+            activeTab === 'github'
+              ? 'bg-slate-900 text-white shadow-xs ring-2 ring-slate-400/40'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <GitBranch className="w-4 h-4 text-emerald-500" />
+          <span>Sincronizar com GitHub</span>
+          <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">
+            Direto
+          </span>
         </button>
 
         <button
@@ -1843,6 +1861,20 @@ export function AdminPanel({
         <ThemeSettingsTab
           siteSettings={siteSettings}
           onSave={onUpdateSiteSettings}
+          showToast={showToast}
+        />
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 8: DIRECT GITHUB SYNC */}
+      {/* ========================================================================= */}
+      {activeTab === 'github' && (
+        <GitHubSyncTab
+          products={products}
+          events={events}
+          headerBanners={headerBanners}
+          sidebarBanners={sidebarBanners}
+          siteSettings={siteSettings}
           showToast={showToast}
         />
       )}

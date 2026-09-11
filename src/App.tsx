@@ -15,6 +15,12 @@ import {
   resetAllDataToDefaults
 } from './utils/storage';
 import { getStoredSession, clearSession, AdminSession } from './utils/auth';
+import { 
+  getGitHubConfig, 
+  syncDataToGitHub, 
+  fetchPublishedSiteData, 
+  SitePayload 
+} from './utils/githubSync';
 
 import { Header } from './components/Header';
 import { TopBannerSlider } from './components/TopBannerSlider';
@@ -46,30 +52,94 @@ export default function App() {
   const [sidebarBanners, setSidebarBanners] = useState<SidebarBanner[]>(getInitialOrStoredSidebarBanners);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(getInitialOrStoredSiteSettings);
 
+  // Helper to trigger background GitHub commit when autoSync is active
+  const triggerGitHubAutoSync = (overrides?: Partial<SitePayload>) => {
+    const gitConfig = getGitHubConfig();
+    if (gitConfig.autoSync && gitConfig.owner && gitConfig.repo && gitConfig.token) {
+      const payload: SitePayload = {
+        updatedAt: new Date().toISOString(),
+        version: 1,
+        siteSettings: overrides?.siteSettings ?? siteSettings,
+        products: overrides?.products ?? products,
+        events: overrides?.events ?? events,
+        headerBanners: overrides?.headerBanners ?? headerBanners,
+        sidebarBanners: overrides?.sidebarBanners ?? sidebarBanners
+      };
+
+      syncDataToGitHub(payload, gitConfig).then((res) => {
+        if (res.success) {
+          showToast('Alteração salva e sincronizada com o GitHub com sucesso!');
+        } else {
+          console.warn('Falha na sincronização automática do GitHub:', res.error);
+        }
+      });
+    }
+  };
+
+  // Hydrate published data from GitHub or public/site-data.json so all visitors see updates immediately
+  useEffect(() => {
+    async function loadPublished() {
+      try {
+        const gitConfig = getGitHubConfig();
+        const published = await fetchPublishedSiteData(gitConfig);
+        if (published) {
+          if (Array.isArray(published.products) && published.products.length > 0) {
+            setProducts(published.products);
+            saveProducts(published.products);
+          }
+          if (Array.isArray(published.events) && published.events.length > 0) {
+            setEvents(published.events);
+            saveEvents(published.events);
+          }
+          if (Array.isArray(published.headerBanners) && published.headerBanners.length > 0) {
+            setHeaderBanners(published.headerBanners);
+            saveHeaderBanners(published.headerBanners);
+          }
+          if (Array.isArray(published.sidebarBanners) && published.sidebarBanners.length > 0) {
+            setSidebarBanners(published.sidebarBanners);
+            saveSidebarBanners(published.sidebarBanners);
+          }
+          if (published.siteSettings) {
+            setSiteSettings(published.siteSettings);
+            saveSiteSettings(published.siteSettings);
+          }
+        }
+      } catch (err) {
+        console.warn('Não foi possível carregar dados remotos do GitHub:', err);
+      }
+    }
+    loadPublished();
+  }, []);
+
   // Synchronize state updates with storage
   const handleUpdateProducts = (updated: Product[]) => {
     setProducts(updated);
     saveProducts(updated);
+    triggerGitHubAutoSync({ products: updated });
   };
 
   const handleUpdateEvents = (updated: EventPost[]) => {
     setEvents(updated);
     saveEvents(updated);
+    triggerGitHubAutoSync({ events: updated });
   };
 
   const handleUpdateHeaderBanners = (updated: HeaderBanner[]) => {
     setHeaderBanners(updated);
     saveHeaderBanners(updated);
+    triggerGitHubAutoSync({ headerBanners: updated });
   };
 
   const handleUpdateSidebarBanners = (updated: SidebarBanner[]) => {
     setSidebarBanners(updated);
     saveSidebarBanners(updated);
+    triggerGitHubAutoSync({ sidebarBanners: updated });
   };
 
   const handleUpdateSiteSettings = (updated: SiteSettings) => {
     setSiteSettings(updated);
     saveSiteSettings(updated);
+    triggerGitHubAutoSync({ siteSettings: updated });
   };
 
   const handleResetAll = () => {
