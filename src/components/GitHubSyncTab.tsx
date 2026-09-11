@@ -14,7 +14,9 @@ import {
   HelpCircle,
   FolderGit2,
   Lock,
-  Sparkles
+  Sparkles,
+  ArrowRight,
+  ShieldAlert
 } from 'lucide-react';
 import { 
   GitHubSyncConfig, 
@@ -23,6 +25,8 @@ import {
   testGitHubConnection, 
   syncDataToGitHub, 
   downloadSiteDataJson,
+  normalizeGitHubInput,
+  normalizeGitHubToken,
   SitePayload
 } from '../utils/githubSync';
 import { Product, EventPost, HeaderBanner, SidebarBanner, SiteSettings } from '../types';
@@ -54,10 +58,19 @@ export function GitHubSyncTab({
 
   // States for actions
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{ 
+    success: boolean; 
+    message: string; 
+    defaultBranch?: string;
+    hasPushPermission?: boolean;
+  } | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ success: boolean; message: string; commitUrl?: string } | null>(null);
+  const [syncResult, setSyncResult] = useState<{ 
+    success: boolean; 
+    message: string; 
+    commitUrl?: string;
+  } | null>(null);
 
   const [showTutorial, setShowTutorial] = useState(!config.token);
 
@@ -71,6 +84,35 @@ export function GitHubSyncTab({
     setAutoSync(current.autoSync ?? false);
   }, []);
 
+  // Intelligent auto-clean when user pastes a full github URL into repo or owner
+  const handleOwnerChange = (val: string) => {
+    if (val.includes('github.com')) {
+      const normalized = normalizeGitHubInput(val, repo);
+      setOwner(normalized.owner);
+      if (normalized.repo && (!repo || repo === val)) {
+        setRepo(normalized.repo);
+      }
+    } else {
+      setOwner(val);
+    }
+  };
+
+  const handleRepoChange = (val: string) => {
+    if (val.includes('github.com') || val.includes('/')) {
+      const normalized = normalizeGitHubInput(owner, val);
+      if (normalized.owner && (!owner || owner === val)) {
+        setOwner(normalized.owner);
+      }
+      setRepo(normalized.repo);
+    } else {
+      setRepo(val);
+    }
+  };
+
+  const handleTokenChange = (val: string) => {
+    setToken(normalizeGitHubToken(val));
+  };
+
   const getPayload = (): SitePayload => ({
     updatedAt: new Date().toISOString(),
     version: 1,
@@ -81,62 +123,95 @@ export function GitHubSyncTab({
     sidebarBanners
   });
 
-  const handleSaveConfig = (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    const updated: GitHubSyncConfig = {
+  const getCleanConfig = (): GitHubSyncConfig => {
+    const norm = normalizeGitHubInput(owner, repo);
+    const cleanTok = normalizeGitHubToken(token);
+    return {
       ...config,
-      owner: owner.trim(),
-      repo: repo.trim(),
+      owner: norm.owner,
+      repo: norm.repo,
       branch: branch.trim() || 'main',
-      token: token.trim(),
+      token: cleanTok,
       autoSync
     };
+  };
+
+  const handleSaveConfig = (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    const updated = getCleanConfig();
     saveGitHubConfig(updated);
     setConfig(updated);
+    setOwner(updated.owner);
+    setRepo(updated.repo);
+    setToken(updated.token);
     showToast('Configurações do GitHub salvas com sucesso!');
   };
 
   const handleTestConnection = async () => {
+    const tempConfig = getCleanConfig();
+    if (!tempConfig.owner || !tempConfig.repo) {
+      showToast('Preencha o Usuário e o Repositório antes de testar.');
+      return;
+    }
+    if (!tempConfig.token) {
+      showToast('Preencha o Token do GitHub antes de testar.');
+      return;
+    }
+
     setIsTesting(true);
     setTestResult(null);
-
-    const tempConfig: GitHubSyncConfig = {
-      ...config,
-      owner: owner.trim(),
-      repo: repo.trim(),
-      branch: branch.trim() || 'main',
-      token: token.trim(),
-      autoSync
-    };
 
     const result = await testGitHubConnection(tempConfig);
     setIsTesting(false);
     setTestResult(result);
 
     if (result.success) {
+      // If default branch detected differs, update branch state
+      if (result.defaultBranch && result.defaultBranch !== tempConfig.branch) {
+        tempConfig.branch = result.defaultBranch;
+        setBranch(result.defaultBranch);
+      }
       saveGitHubConfig(tempConfig);
       setConfig(tempConfig);
       showToast('Conexão com o repositório confirmada!');
+    } else {
+      if (result.defaultBranch && result.defaultBranch !== tempConfig.branch) {
+        setBranch(result.defaultBranch);
+      }
+      showToast('Falha na conexão com o GitHub. Veja os detalhes abaixo.');
     }
   };
 
   const handleManualSync = async () => {
-    if (!owner.trim() || !repo.trim() || !token.trim()) {
-      showToast('Preencha os dados do repositório e o token primeiro.');
+    const tempConfig = getCleanConfig();
+
+    if (!tempConfig.owner || !tempConfig.repo) {
+      setSyncResult({
+        success: false,
+        message: 'Por favor, preencha o Usuário e o Nome do Repositório nos campos abaixo antes de sincronizar.'
+      });
+      showToast('Preencha o usuário e o repositório.');
       return;
     }
 
+    if (!tempConfig.token) {
+      setSyncResult({
+        success: false,
+        message: 'Por favor, informe seu Token de Acesso Pessoal (PAT) do GitHub no campo correspondente abaixo.'
+      });
+      showToast('Informe o Token do GitHub para sincronizar.');
+      return;
+    }
+
+    // Auto-save configuration so user never loses what they typed
+    saveGitHubConfig(tempConfig);
+    setConfig(tempConfig);
+    setOwner(tempConfig.owner);
+    setRepo(tempConfig.repo);
+    setToken(tempConfig.token);
+
     setIsSyncing(true);
     setSyncResult(null);
-
-    const tempConfig: GitHubSyncConfig = {
-      ...config,
-      owner: owner.trim(),
-      repo: repo.trim(),
-      branch: branch.trim() || 'main',
-      token: token.trim(),
-      autoSync
-    };
 
     const payload = getPayload();
     const res = await syncDataToGitHub(payload, tempConfig);
@@ -145,17 +220,18 @@ export function GitHubSyncTab({
     if (res.success) {
       setSyncResult({
         success: true,
-        message: 'Commit realizado com sucesso no GitHub! O repositório foi atualizado.',
+        message: 'Commit realizado com sucesso no GitHub! Os arquivos public/site-data.json e src/data/initialData.ts foram atualizados no repositório.',
         commitUrl: res.commitUrl
       });
       const updated = getGitHubConfig();
       setConfig(updated);
-      showToast('Dados sincronizados no GitHub com sucesso!');
+      showToast('Site sincronizado no GitHub com sucesso!');
     } else {
       setSyncResult({
         success: false,
         message: res.error || 'Ocorreu um erro ao sincronizar com o GitHub.'
       });
+      showToast('Erro ao sincronizar no GitHub. Veja os detalhes abaixo.');
     }
   };
 
@@ -165,6 +241,9 @@ export function GitHubSyncTab({
     showToast('Download do arquivo site-data.json iniciado!');
   };
 
+  const displayOwner = owner.trim() || config.owner;
+  const displayRepo = repo.trim() || config.repo;
+  const displayBranch = branch.trim() || config.branch || 'main';
   const isConnected = !!(config.token && config.owner && config.repo && config.lastStatus === 'success');
 
   return (
@@ -192,7 +271,7 @@ export function GitHubSyncTab({
           className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
         >
           <HelpCircle className="w-4 h-4 text-indigo-300" />
-          <span>{showTutorial ? 'Ocultar Tutorial' : 'Como Gerar Token'}</span>
+          <span>{showTutorial ? 'Ocultar Instruções' : 'Como Gerar Token'}</span>
         </button>
       </div>
 
@@ -214,13 +293,13 @@ export function GitHubSyncTab({
               Clique em <strong>Generate new token</strong> (Generate new token classic).
             </li>
             <li>
-              Dê uma nota (ex: <span className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200">Painel Loja</span>) e marque a caixinha <strong className="text-indigo-950 font-mono">repo</strong> (para ter acesso de leitura e escrita).
+              Dê uma nota (ex: <span className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200">Painel Loja</span>) e <strong>MUITO IMPORTANTE</strong>: marque a caixinha <strong className="text-indigo-950 font-mono bg-amber-100 px-1 py-0.5 rounded">repo</strong> (para ter permissão de leitura e gravação/push).
             </li>
             <li>
               Role até o final da página e clique no botão verde <strong>Generate token</strong>. Copie o token gerado (começa com <span className="font-mono font-bold">ghp_</span>) e cole no campo abaixo!
             </li>
           </ol>
-          <div className="pt-1">
+          <div className="pt-1 flex items-center gap-3">
             <a
               href="https://github.com/settings/tokens"
               target="_blank"
@@ -245,7 +324,7 @@ export function GitHubSyncTab({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-sm text-slate-900">
-                {config.owner && config.repo ? `${config.owner}/${config.repo}` : 'Repositório não configurado'}
+                {displayOwner && displayRepo ? `${displayOwner}/${displayRepo}` : 'Repositório não configurado'}
               </h4>
               {isConnected && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -255,7 +334,7 @@ export function GitHubSyncTab({
               )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Branch: <span className="font-mono font-semibold text-slate-700">{config.branch || 'main'}</span>
+              Branch: <span className="font-mono font-semibold text-slate-700">{displayBranch}</span>
               {config.lastSyncAt && (
                 <> • Último commit: {new Date(config.lastSyncAt).toLocaleString('pt-BR')}</>
               )}
@@ -277,9 +356,10 @@ export function GitHubSyncTab({
           )}
           <button
             type="button"
+            id="btn-sync-github-top"
             onClick={handleManualSync}
-            disabled={isSyncing || !config.token}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+            disabled={isSyncing}
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
             <span>{isSyncing ? 'Enviando para GitHub...' : 'Sincronizar no GitHub Agora'}</span>
@@ -299,9 +379,22 @@ export function GitHubSyncTab({
           ) : (
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           )}
-          <div>
-            <p className="font-bold">{testResult.success ? 'Conexão Bem-Sucedida!' : 'Falha na Conexão'}</p>
-            <p className="mt-0.5 text-[11px]">{testResult.message}</p>
+          <div className="space-y-1">
+            <p className="font-bold">{testResult.success ? 'Conexão Bem-Sucedida!' : 'Falha na Conexão com o GitHub'}</p>
+            <p className="text-[11px] leading-relaxed">{testResult.message}</p>
+            {testResult.defaultBranch && testResult.defaultBranch !== branch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBranch(testResult.defaultBranch!);
+                  showToast(`Branch ajustada para "${testResult.defaultBranch}".`);
+                }}
+                className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 underline cursor-pointer"
+              >
+                <span>Mudar branch de "{branch}" para "{testResult.defaultBranch}"</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -317,9 +410,9 @@ export function GitHubSyncTab({
           ) : (
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           )}
-          <div className="space-y-1">
+          <div className="space-y-1.5 w-full">
             <p className="font-bold">{syncResult.success ? 'GitHub Atualizado com Sucesso!' : 'Falha na Sincronização'}</p>
-            <p className="text-[11px]">{syncResult.message}</p>
+            <p className="text-[11px] leading-relaxed">{syncResult.message}</p>
             {syncResult.commitUrl && (
               <a
                 href={syncResult.commitUrl}
@@ -327,9 +420,24 @@ export function GitHubSyncTab({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-indigo-700 font-bold underline text-[11px] pt-1"
               >
-                <span>Visualizar alterações gravadas no GitHub</span>
+                <span>Visualizar alterações gravadas no repositório GitHub</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
+            )}
+
+            {!syncResult.success && (
+              <div className="mt-2 p-3 bg-white/80 rounded-lg border border-rose-200 text-rose-800 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-[11px]">
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Dicas para resolver:</span>
+                </div>
+                <ul className="list-disc list-inside text-[10px] space-y-1 text-rose-700">
+                  <li><strong>Token sem permissão de escrita?</strong> Certifique-se de que a caixinha <code>repo</code> foi marcada ao gerar o token.</li>
+                  <li><strong>Nome do repositório correto?</strong> Digite apenas o nome exato (ex: <code>visualizador-telas</code>).</li>
+                  <li><strong>Branch correta?</strong> Verifique se no GitHub a sua branch é <code>main</code> ou <code>master</code>.</li>
+                  <li>Clique no botão <strong>"Testar Conexão"</strong> abaixo para validar o token antes de sincronizar.</li>
+                </ul>
+              </div>
             )}
           </div>
         </div>
@@ -358,12 +466,12 @@ export function GitHubSyncTab({
               type="text"
               required
               value={owner}
-              onChange={(e) => setOwner(e.target.value)}
+              onChange={(e) => handleOwnerChange(e.target.value)}
               placeholder="Ex: farias-hudson"
               className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-hidden font-mono"
             />
             <span className="text-[10px] text-slate-400 mt-1 block">
-              Seu nome de usuário no GitHub.
+              Seu usuário no GitHub (sem @). Aceita colar link do GitHub.
             </span>
           </div>
 
@@ -375,12 +483,12 @@ export function GitHubSyncTab({
               type="text"
               required
               value={repo}
-              onChange={(e) => setRepo(e.target.value)}
+              onChange={(e) => handleRepoChange(e.target.value)}
               placeholder="Ex: visualizador-telas"
               className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-hidden font-mono"
             />
             <span className="text-[10px] text-slate-400 mt-1 block">
-              O nome exato do repositório no GitHub.
+              O nome exato do repositório no GitHub. Aceita colar link completo.
             </span>
           </div>
 
@@ -391,7 +499,7 @@ export function GitHubSyncTab({
             <input
               type="text"
               value={branch}
-              onChange={(e) => setBranch(e.target.value)}
+              onChange={(e) => setBranch(e.target.value.trim())}
               placeholder="main"
               className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-hidden font-mono"
             />
@@ -410,7 +518,7 @@ export function GitHubSyncTab({
               type={showToken ? 'text' : 'password'}
               required
               value={token}
-              onChange={(e) => setToken(e.target.value)}
+              onChange={(e) => handleTokenChange(e.target.value)}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               className="w-full pr-10 pl-3.5 py-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:outline-hidden font-mono"
             />
@@ -432,10 +540,10 @@ export function GitHubSyncTab({
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
           <div>
             <label htmlFor="toggle-auto-sync" className="font-bold text-xs text-slate-800 cursor-pointer">
-              Sincronização Automática ao Salvar
+              Sincronização Automática ao Salvar Alterações
             </label>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Quando ativado, qualquer novo produto, banner, evento ou alteração de tema salva no painel fará um commit automático no GitHub em segundo plano.
+              Quando ativado, qualquer produto, banner, evento ou cor editada no painel fará um commit automático no GitHub em segundo plano.
             </p>
           </div>
           <input
@@ -449,9 +557,10 @@ export function GitHubSyncTab({
 
         {/* Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              id="btn-test-github-connection"
               onClick={handleTestConnection}
               disabled={isTesting || !token.trim() || !owner.trim() || !repo.trim()}
               className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
@@ -462,6 +571,7 @@ export function GitHubSyncTab({
 
             <button
               type="button"
+              id="btn-download-site-data"
               onClick={handleDownloadBackup}
               className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Baixar arquivo JSON com todos os dados"
@@ -471,15 +581,30 @@ export function GitHubSyncTab({
             </button>
           </div>
 
-          <button
-            type="submit"
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>Salvar Configurações do GitHub</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              id="btn-save-github-config"
+              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>Salvar Configurações</span>
+            </button>
+
+            <button
+              type="button"
+              id="btn-sync-github-bottom"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Enviando para GitHub...' : 'Sincronizar no GitHub Agora'}</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
   );
 }
+
